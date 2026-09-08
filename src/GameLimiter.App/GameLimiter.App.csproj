@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>GameLimiter</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>../../assets/GameLimiter.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.1</Version>
+    <Product>GameLimiter</Product>
+    <Description>Local family game timer for Windows</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GameLimiter.Infrastructure/GameLimiter.Infrastructure.csproj"/>
+    <Resource Include="../../assets/GameLimiter.ico" Link="Assets/GameLimiter.ico"/>
+  </ItemGroup>
+</Project>

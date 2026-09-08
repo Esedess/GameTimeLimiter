@@ -1,0 +1,16 @@
+<DrawingImage xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+  <DrawingImage.Drawing>
+    <DrawingGroup>
+      <!-- Original vector artwork: a controller with a clock badge. Viewbox 256x256. -->
+      <GeometryDrawing Brush="#172D50" Geometry="M 56,8 L 200,8 Q 248,8 248,56 L 248,200 Q 248,248 200,248 L 56,248 Q 8,248 8,200 L 8,56 Q 8,8 56,8 Z"/>
+      <GeometryDrawing Brush="#24486C" Geometry="M 56,8 L 200,8 Q 248,8 248,56 L 248,104 Q 146,151 8,198 L 8,56 Q 8,8 56,8 Z"/>
+      <GeometryDrawing Brush="#F5FAFF" Geometry="M 76,83 C 54,83 44,104 39,129 L 31,169 C 26,194 48,205 65,190 L 88,169 L 151,169 L 172,189 C 190,204 209,191 204,170 L 196,129 C 191,104 184,83 161,83 Z"/>
+      <GeometryDrawing Brush="#24486C" Geometry="M 64,113 L 78,113 L 78,127 L 92,127 L 92,141 L 78,141 L 78,155 L 64,155 L 64,141 L 50,141 L 50,127 L 64,127 Z"/>
+      <GeometryDrawing Brush="#438BA3"><GeometryDrawing.Geometry><EllipseGeometry Center="152,123" RadiusX="9" RadiusY="9"/></GeometryDrawing.Geometry></GeometryDrawing>
+      <GeometryDrawing Brush="#438BA3"><GeometryDrawing.Geometry><EllipseGeometry Center="174,143" RadiusX="9" RadiusY="9"/></GeometryDrawing.Geometry></GeometryDrawing>
+      <GeometryDrawing Brush="#172D50"><GeometryDrawing.Geometry><EllipseGeometry Center="188,65" RadiusX="51" RadiusY="51"/></GeometryDrawing.Geometry></GeometryDrawing>
+      <GeometryDrawing Brush="#FFCB66"><GeometryDrawing.Geometry><EllipseGeometry Center="188,65" RadiusX="43" RadiusY="43"/></GeometryDrawing.Geometry></GeometryDrawing>
+      <GeometryDrawing Geometry="M 188,39 L 188,66 L 206,77"><GeometryDrawing.Pen><Pen Brush="#172D50" Thickness="10" StartLineCap="Round" EndLineCap="Round" LineJoin="Round"/></GeometryDrawing.Pen></GeometryDrawing>
+    </DrawingGroup>
+  </DrawingImage.Drawing>
+</DrawingImage>

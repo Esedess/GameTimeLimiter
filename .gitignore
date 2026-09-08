@@ -1,0 +1,13 @@
+.dotnet/
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+dotnet-install.ps1
+*.user
+.tools/
+delivery/
+.vs/
+*.db
+*.db-shm
+*.db-wal
