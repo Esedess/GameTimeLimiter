@@ -8,6 +8,7 @@ public sealed class SessionCoordinator(Store store, IProcessLauncher launcher, L
     public long? ChildId { get; private set; }
     public event Action<long, SessionState, nint>? Updated;
     public event Action? UsageChanged;
+    public event Action? Started;
     private bool stopRequested;
     private bool allowanceReduced;
     public void SettingsChanged(bool reduced) { allowanceReduced |= reduced; }
@@ -59,6 +60,7 @@ public sealed class SessionCoordinator(Store store, IProcessLauncher launcher, L
             session = store.Begin(child, game.Id, DateTime.Now, 15, adultTimed: adultSeconds is not null);
             process = await launcher.LaunchAsync(game, store.Settings.Discovery, CancellationToken.None);
             store.Attach(session, process); accounted = DateTime.Now; elapsed.Start(); log.Write($"Session start {session}");
+            Started?.Invoke();
             var timer = new SessionTimer();
             while (!process.HasExited)
             {

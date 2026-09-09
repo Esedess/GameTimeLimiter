@@ -9,6 +9,16 @@ public sealed class StoreTests : IDisposable
     private readonly string folder = Path.Combine(Path.GetTempPath(), "GameLimiterTests-" + Guid.NewGuid());
     private Store Create() => new(Path.Combine(folder, "test.db"));
     [Fact]
+    public void WindowPreferencesDefaultToEnabledAndPersistIndependently()
+    {
+        var db = Create();
+        Assert.True(db.MinimizeOnGameStart); Assert.True(db.ExitOnGameEnd);
+        db.MinimizeOnGameStart = false;
+        Assert.False(Create().MinimizeOnGameStart); Assert.True(Create().ExitOnGameEnd);
+        db.ExitOnGameEnd = false; db.MinimizeOnGameStart = true;
+        Assert.True(Create().MinimizeOnGameStart); Assert.False(Create().ExitOnGameEnd);
+    }
+    [Fact]
     public void ChildrenCanBeAddedEditedArchivedWithoutLosingHistory()
     {
         var db = Create(); var c = db.SaveChild(new(0, "Child", 1800)); var session = db.Begin(c.Id, "game", DateTime.Now, 5); db.AddUsage(session, DateTime.Now, 120); db.End(session, "Test");

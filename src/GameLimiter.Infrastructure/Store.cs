@@ -42,6 +42,8 @@ public sealed class Store
     private static object? Scalar(SqliteConnection db, string sql, params object?[] values) { using var cmd = Command(db, sql, values); return cmd.ExecuteScalar(); }
     public string? Get(string key) { using var db = Open(); return Scalar(db, "SELECT Value FROM AppSettings WHERE Key=$0", key) as string; }
     public void Set(string key, string value) { using var db = Open(); Execute(db, "INSERT INTO AppSettings VALUES($0,$1) ON CONFLICT(Key) DO UPDATE SET Value=$1", key, value); }
+    public bool MinimizeOnGameStart { get => Get("MinimizeOnGameStart") != "False"; set => Set("MinimizeOnGameStart", value.ToString()); }
+    public bool ExitOnGameEnd { get => Get("ExitOnGameEnd") != "False"; set => Set("ExitOnGameEnd", value.ToString()); }
     public TimerSettings Settings => JsonSerializer.Deserialize<TimerSettings>(Get("Timer") ?? "{}")!;
     public void SaveSettings(TimerSettings value) { value.Validate(); Set("Timer", JsonSerializer.Serialize(value)); }
     public List<Child> Children(bool archived = false)

@@ -74,6 +74,12 @@ public sealed class SettingsWindow : Window
         var pinPanel = Tab("PIN"); pinPanel.Children.Add(Ui.Text("Новый PIN (4–12 цифр)")); var newPin = new PasswordBox { MaxLength = 12, FontSize = 20 }; pinPanel.Children.Add(newPin); pinPanel.Children.Add(Ui.Text("Повторите PIN")); var confirmPin = new PasswordBox { MaxLength = 12, FontSize = 20 }; pinPanel.Children.Add(confirmPin);
         pinPanel.Children.Add(Ui.Button("Изменить PIN", () => { if (newPin.Password != confirmPin.Password) throw new ArgumentException("PIN не совпадают."); store.Set("ParentPin", PinService.Hash(newPin.Password)); newPin.Clear(); confirmPin.Clear(); App.Log.Write("Parent PIN changed"); MessageBox.Show("PIN изменён.", "GameLimiter"); }));
         var diagnostics = Tab("Общие");
+        diagnostics.Children.Add(Ui.Text("Поведение приложения", 20));
+        var minimize = Ui.Check(diagnostics, "Сворачивать GameLimiter при запуске игры", store.MinimizeOnGameStart);
+        var exit = Ui.Check(diagnostics, "Закрывать GameLimiter после завершения игры", store.ExitOnGameEnd);
+        minimize.Click += (_, _) => Ui.Guard(() => { store.MinimizeOnGameStart = minimize.IsChecked == true; App.Log.Write("Minimize on game start: " + store.MinimizeOnGameStart); });
+        exit.Click += (_, _) => Ui.Guard(() => { store.ExitOnGameEnd = exit.IsChecked == true; App.Log.Write("Exit on game end: " + store.ExitOnGameEnd); });
+        diagnostics.Children.Add(Ui.Text("Оба параметра включены по умолчанию. Изменения сохраняются сразу."));
         diagnostics.Children.Add(Ui.Text("Оформление", 20));
         var themeStatus = Ui.Text(ThemeManager.Current == "Dark" ? "Текущая тема: тёмная" : "Текущая тема: светлая");
         var themeButtons = new WrapPanel();
@@ -90,7 +96,7 @@ public sealed class SettingsWindow : Window
         diagnostics.Children.Add(themeStatus);
         diagnostics.Children.Add(Ui.Text("Выбор сохраняется сразу и применяется ко всем окнам."));
         diagnostics.Children.Add(Ui.Text("Диагностика", 20));
-        diagnostics.Children.Add(Ui.Text("GameLimiter 1.0.1 · Windows x64\nБаза: " + Path.Combine(App.DataFolder, "gametime.db") + "\nЖурналы: " + Path.Combine(App.DataFolder, "logs")));
+        diagnostics.Children.Add(Ui.Text("GameLimiter 1.0.2 · Windows x64\nБаза: " + Path.Combine(App.DataFolder, "gametime.db") + "\nЖурналы: " + Path.Combine(App.DataFolder, "logs")));
         diagnostics.Children.Add(Ui.Button("Открыть папку данных", () => Process.Start(new ProcessStartInfo(App.DataFolder) { UseShellExecute = true })));
         diagnostics.Children.Add(Ui.Button("Открыть журналы", () => { var folder = Path.Combine(App.DataFolder, "logs"); Directory.CreateDirectory(folder); Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true }); }));
         diagnostics.Children.Add(Ui.Text("Обычный запуск игры — через её ярлык. Во время игры окно GameLimiter можно свернуть; настройки доступны на панели задач. Изменения полей сохраняются кнопкой «Сохранить»."));

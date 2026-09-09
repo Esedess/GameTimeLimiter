@@ -37,13 +37,25 @@ internal static class SmokeTest
                     Render(settings, $"settings-games-shortcuts{suffix}.png");
                     scroll.ScrollToTop();
                 }
-                if (i == 4) Render(settings, $"theme-choice{suffix}.png", 220);
+                if (i == 4) Render(settings, $"theme-choice{suffix}.png", 470);
             }
             Render(new PinWindow(store, true), $"first-run{suffix}.png");
             Render(new MainWindow(store, coordinator, game), $"players{suffix}.png");
 
             // Exercise the real Settings theme button and verify the saved preference.
             var general = (StackPanel)((ScrollViewer)((TabItem)tabs.Items[4]).Content).Content;
+            foreach (var checkbox in general.Children.OfType<CheckBox>())
+            {
+                checkbox.IsChecked = false;
+                checkbox.RaiseEvent(new RoutedEventArgs(CheckBox.ClickEvent));
+            }
+            if (store.MinimizeOnGameStart || store.ExitOnGameEnd) throw new InvalidOperationException("Window preferences did not save.");
+            foreach (var checkbox in general.Children.OfType<CheckBox>())
+            {
+                checkbox.IsChecked = true;
+                checkbox.RaiseEvent(new RoutedEventArgs(CheckBox.ClickEvent));
+            }
+            if (!store.MinimizeOnGameStart || !store.ExitOnGameEnd) throw new InvalidOperationException("Window preferences did not restore.");
             var choices = general.Children.OfType<WrapPanel>().First();
             var opposite = theme == "Dark" ? "Светлая" : "Тёмная";
             choices.Children.OfType<Button>().Single(b => (string)b.Content == opposite).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

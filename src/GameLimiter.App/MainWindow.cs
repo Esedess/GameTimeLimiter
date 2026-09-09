@@ -23,6 +23,7 @@ public sealed class MainWindow : Window
         panel.Children.Add(Ui.Button("Настройки родителя", () => { if (Authenticate()) new SettingsWindow(store, coordinator) { Owner = this }.ShowDialog(); }));
         panel.Children.Add(Ui.Button("Завершить текущую игру", () => { if (coordinator.Active && Authenticate()) coordinator.Stop(); }));
         coordinator.Updated += (remaining, state, handle) => { status.Text = state == SessionState.Completed ? "Игра завершена" : remaining == long.MaxValue ? "Взрослый · без лимита" : $"Осталось {Ui.Time(remaining)}"; overlay.Update(remaining, state, handle, store.Settings); };
+        coordinator.Started += () => { if (store.MinimizeOnGameStart) WindowState = WindowState.Minimized; };
         refresh.Tick += (_, _) => { if (!coordinator.Active) RefreshPlayers(); }; refresh.Start(); RefreshPlayers();
         Closing += (_, e) => { if (coordinator.Active) { e.Cancel = true; MessageBox.Show("Сначала завершите игру. Таймер продолжает работать; окно можно свернуть.", "GameLimiter"); } };
         Closed += (_, _) => { refresh.Stop(); overlay.Close(); Application.Current.Shutdown(); };
@@ -36,7 +37,7 @@ public sealed class MainWindow : Window
         foreach (var child in store.Children().Where(c => c.Enabled))
         {
             var remaining = store.Allowance(child.Id, DateOnly.FromDateTime(DateTime.Now)).Remaining;
-            var button = Ui.Button(child.Name + "\n" + (remaining == 0 ? "На сегодня время закончилось" : Ui.Time(remaining)), () => _ = StartAsync(child.Id, null)); button.FontSize = 24; button.MinHeight = 80; button.IsEnabled = remaining > 0; players.Children.Add(button);
+            var button = Ui.Button(child.Name + "\n" + RemainingTimeText.Format(remaining), () => _ = StartAsync(child.Id, null)); button.FontSize = 24; button.MinHeight = 80; button.IsEnabled = remaining > 0; players.Children.Add(button);
         }
         var adult = Ui.Button("Взрослый", () => { if (Authenticate()) AdultChoices(); }); adult.FontSize = 24; players.Children.Add(adult);
     }
@@ -52,13 +53,17 @@ public sealed class MainWindow : Window
     }
     private async Task StartAsync(long? child, int? adultSeconds)
     {
+        var completed = false;
         players.IsEnabled = false; status.Text = "Запускаем игру…";
         try
         {
             var currentGame = store.Games().FirstOrDefault(g => g.Id == game!.Id && g.Enabled) ?? throw new InvalidOperationException("Игра удалена или отключена в настройках.");
             await coordinator.RunAsync(currentGame, child, adultSeconds);
+            completed = true;
         }
-        catch (Exception ex) { App.Log.Write("Launch/session failure: " + ex); MessageBox.Show(ex.Message, "GameLimiter"); }
+        catch (Exception ex) { WindowState = WindowState.Normal; App.Log.Write("Launch/session failure: " + ex); MessageBox.Show(this, ex.Message, "GameLimiter"); }
         finally { players.IsEnabled = true; RefreshPlayers(); }
+        // RunAsync returns only after final accounting and process cleanup; errors stay visible.
+        if (completed && store.ExitOnGameEnd) Close();
     }
 }
