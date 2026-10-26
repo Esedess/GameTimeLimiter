@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.0.3"
+  #define AppVersion "1.1.0-beta.1"
 #endif
 #ifndef PublishDir
   #define PublishDir SourcePath + "..\artifacts\publish\win-x64"
@@ -9,12 +9,12 @@
 #endif
 
 [Setup]
-AppId={{D0B3694E-CE1A-471E-96D8-483EA7E191E8}
-AppName=GameLimiter
+AppId={{EEEB9AF5-5C83-4304-9E84-826BEBC99FD0}
+AppName=GameLimiter Beta
 AppVersion={#AppVersion}
-AppVerName=GameLimiter {#AppVersion}
-DefaultDirName={localappdata}\Programs\GameLimiter
-DefaultGroupName=GameLimiter
+AppVerName=GameLimiter Beta {#AppVersion}
+DefaultDirName={localappdata}\Programs\GameLimiter-Beta
+DefaultGroupName=GameLimiter Beta
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -32,7 +32,7 @@ CloseApplications=no
 RestartApplications=no
 Uninstallable=yes
 UsePreviousAppDir=yes
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion=1.1.0.1
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
@@ -45,8 +45,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
 
 [Icons]
-Name: "{autoprograms}\GameLimiter"; Filename: "{app}\GameLimiter.exe"; WorkingDir: "{app}"; Comment: "GameLimiter — настройки игрового времени"
-Name: "{autodesktop}\GameLimiter"; Filename: "{app}\GameLimiter.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\GameLimiter Beta"; Filename: "{app}\GameLimiter.exe"; WorkingDir: "{app}"; Comment: "GameLimiter — настройки игрового времени"
+Name: "{autodesktop}\GameLimiter Beta"; Filename: "{app}\GameLimiter.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\GameLimiter.exe"; Description: "{cm:LaunchProgram,GameLimiter}"; Flags: nowait postinstall skipifsilent

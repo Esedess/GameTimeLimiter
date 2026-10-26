@@ -7,7 +7,8 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationIcon>../../assets/GameLimiter.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.3</Version>
+    <Version>1.1.0-beta.1</Version>
+    <FileVersion>1.1.0.1</FileVersion>
     <Product>GameLimiter</Product>
     <Description>Local family game timer for Windows</Description>
   </PropertyGroup>

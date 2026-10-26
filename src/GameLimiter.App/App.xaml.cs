@@ -7,7 +7,7 @@ public partial class App : Application
 {
     private Mutex? instance;
     private bool owns;
-    public static string DataFolder { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GameLimiter");
+    public static string DataFolder { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GameLimiter-Beta");
     public static LocalLog Log { get; } = new(Path.Combine(DataFolder, "logs"));
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -32,16 +32,16 @@ public partial class App : Application
             catch (Exception ex) { File.WriteAllText(Path.Combine(e.Args[1], "failure.txt"), ex.ToString()); Shutdown(1); }
             return;
         }
-        DispatcherUnhandledException += (_, args) => { Log.Write("Unhandled: " + args.Exception); MessageBox.Show("Ошибка: " + args.Exception.Message, "GameLimiter"); args.Handled = true; };
+        DispatcherUnhandledException += (_, args) => { Log.Write("Unhandled: " + args.Exception); MessageBox.Show("Ошибка: " + args.Exception.Message, "GameLimiter-Beta"); args.Handled = true; };
         try
         {
             instance = new Mutex(false, "Local\\GameLimiter-Application");
             try { owns = instance.WaitOne(0); } catch (AbandonedMutexException) { owns = true; }
-            if (!owns) { MessageBox.Show("GameLimiter уже открыт. Если игра идёт, новая сессия недоступна. Для изменения времени откройте окно GameLimiter на панели задач и нажмите «Настройки».", "GameLimiter"); Shutdown(); return; }
+            if (!owns) { MessageBox.Show("GameLimiter уже открыт. Если игра идёт, новая сессия недоступна. Для изменения времени откройте окно GameLimiter на панели задач и нажмите «Настройки».", "GameLimiter-Beta"); Shutdown(); return; }
             Log.Write("Application startup; args=" + string.Join(" ", e.Args));
             var store = new Store(Path.Combine(DataFolder, "gametime.db")); store.Settings.Validate();
             ThemeManager.Load(store);
-            var coordinator = new SessionCoordinator(store, new ProcessLauncher(Log), Log);
+            var coordinator = new SessionCoordinator(store, new ProcessLauncher(Log, store), Log);
             await coordinator.RecoverAsync();
             if (store.Get("ParentPin") is null)
             {
@@ -59,7 +59,7 @@ public partial class App : Application
             if (id is not null && game is null) throw new ArgumentException("Игра из ярлыка не найдена или отключена. Проверьте настройки.");
             var window = new MainWindow(store, coordinator, game); MainWindow = window; window.Show();
         }
-        catch (Exception ex) { Log.Write("Startup error: " + ex); MessageBox.Show("Не удалось открыть GameLimiter: " + ex.Message, "GameLimiter"); Shutdown(1); }
+        catch (Exception ex) { Log.Write("Startup error: " + ex); MessageBox.Show("Не удалось открыть GameLimiter: " + ex.Message, "GameLimiter-Beta"); Shutdown(1); }
     }
     protected override void OnExit(ExitEventArgs e) { if (owns) instance?.ReleaseMutex(); instance?.Dispose(); base.OnExit(e); }
 }

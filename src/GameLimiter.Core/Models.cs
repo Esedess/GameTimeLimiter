@@ -55,3 +55,7 @@ public interface IProcessLauncher
 {
     Task<IGameProcess> LaunchAsync(Game game, int timeoutSeconds, CancellationToken cancellationToken);
 }
+public interface IChildProcessLauncher : IProcessLauncher
+{
+    Task<IGameProcess> LaunchForChildAsync(Game game, long? child, int timeoutSeconds, CancellationToken cancellationToken);
+}

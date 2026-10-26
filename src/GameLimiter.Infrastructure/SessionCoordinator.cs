@@ -80,7 +80,9 @@ public sealed class SessionCoordinator(Store store, IProcessLauncher launcher, L
             log.Write($"Selected player={(child?.ToString() ?? "Adult")}, game={game.Id}");
             session = store.Begin(child, game.Id, DateTime.Now, 15, adultTimed: adultSeconds is not null);
             SessionId = session;
-            process = await launcher.LaunchAsync(game, store.Settings.Discovery, CancellationToken.None);
+            process = launcher is IChildProcessLauncher childLauncher
+                ? await childLauncher.LaunchForChildAsync(game, child, store.Settings.Discovery, CancellationToken.None)
+                : await launcher.LaunchAsync(game, store.Settings.Discovery, CancellationToken.None);
             store.Attach(session, process); accounted = DateTime.Now; elapsed.Start(); log.Write($"Session start {session}");
             Started?.Invoke();
             var timer = new SessionTimer();

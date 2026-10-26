@@ -23,7 +23,7 @@ public sealed class SettingsWindow : Window
     public SettingsWindow(Store store, SessionCoordinator coordinator)
     {
         this.store = store; this.coordinator = coordinator;
-        Title = "GameLimiter — настройки родителя"; Width = 780; Height = 820; MinWidth = 620; MinHeight = 520; WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Title = "GameLimiter Beta — настройки родителя"; Width = 780; Height = 820; MinWidth = 620; MinHeight = 520; WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var tabs = new TabControl { Margin = new Thickness(12) }; Content = tabs;
         StackPanel Tab(string name) { var panel = new StackPanel { Margin = new Thickness(16) }; tabs.Items.Add(new TabItem { Header = name, Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto } }); return panel; }
         var childPanel = Tab("Дети"); childPanel.Children.Add(children);
@@ -96,10 +96,52 @@ public sealed class SettingsWindow : Window
         diagnostics.Children.Add(themeStatus);
         diagnostics.Children.Add(Ui.Text("Выбор сохраняется сразу и применяется ко всем окнам."));
         diagnostics.Children.Add(Ui.Text("Диагностика", 20));
-        diagnostics.Children.Add(Ui.Text("GameLimiter 1.0.3 · Windows x64\nБаза: " + Path.Combine(App.DataFolder, "gametime.db") + "\nЖурналы: " + Path.Combine(App.DataFolder, "logs")));
+        diagnostics.Children.Add(Ui.Text("GameLimiter Beta 1.1.0-beta.1 · Windows x64\nБаза: " + Path.Combine(App.DataFolder, "gametime.db") + "\nЖурналы: " + Path.Combine(App.DataFolder, "logs")));
         diagnostics.Children.Add(Ui.Button("Открыть папку данных", () => Process.Start(new ProcessStartInfo(App.DataFolder) { UseShellExecute = true })));
         diagnostics.Children.Add(Ui.Button("Открыть журналы", () => { var folder = Path.Combine(App.DataFolder, "logs"); Directory.CreateDirectory(folder); Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true }); }));
         diagnostics.Children.Add(Ui.Text("Обычный запуск игры — через её ярлык. Во время игры окно GameLimiter можно свернуть; настройки доступны на панели задач. Изменения полей сохраняются кнопкой «Сохранить»."));
+        var profilePanel = Tab("Профиль Windows");
+        profilePanel.Children.Add(Ui.Text("Запуск игр ребёнка от другого пользователя", 20));
+        profilePanel.Children.Add(Ui.Text("Beta: локальные пользователи с паролем. Для контроля их игр запустите GameLimiter Beta от имени администратора. Сохранения зависят от самой игры и облачного аккаунта."));
+        profilePanel.Children.Add(Ui.Text("Ребёнок"));
+        var profileChild = new ListBox { DisplayMemberPath = "Name", Height = 75, Margin = new Thickness(0, 8, 0, 8) }; profilePanel.Children.Add(profileChild);
+        var useCurrent = Ui.Check(profilePanel, "Использовать текущего пользователя (по умолчанию)", true);
+        profilePanel.Children.Add(Ui.Text("Пользователь Windows (можно выбрать или ввести ИМЯ-ПК\\имя)"));
+        var accounts = new ListBox { Height = 75 }; profilePanel.Children.Add(accounts);
+        var account = new TextBox { MinHeight = 32 }; profilePanel.Children.Add(account);
+        accounts.SelectionChanged += (_, _) => { if (accounts.SelectedItem is string value) account.Text = value; };
+        try { accounts.ItemsSource = WindowsProfiles.LocalAccounts(); } catch (Exception ex) { App.Log.Write("Local account listing failed: " + ex.Message); }
+        profilePanel.Children.Add(Ui.Text("Пароль Windows — не PIN Windows Hello"));
+        var password = new PasswordBox { FontSize = 20 }; profilePanel.Children.Add(password);
+        var profileStatus = Ui.Text(""); profilePanel.Children.Add(profileStatus);
+        void LoadProfile()
+        {
+            password.Clear();
+            var saved = profileChild.SelectedItem is Child c ? WindowsProfiles.Get(store, c.Id) : null;
+            useCurrent.IsChecked = saved is null; account.Text = saved is null ? "" : saved.Domain + "\\" + saved.User;
+            accounts.IsEnabled = account.IsEnabled = password.IsEnabled = saved is not null;
+            profileStatus.Text = saved is null ? "Запуск от текущего пользователя." : "Пароль сохранён защищённо. Для изменения введите его заново.";
+        }
+        profileChild.SelectionChanged += (_, _) => Ui.Guard(LoadProfile);
+        useCurrent.Click += (_, _) => { accounts.IsEnabled = account.IsEnabled = password.IsEnabled = useCurrent.IsChecked != true; profileStatus.Text = "Изменения ещё не сохранены."; };
+        profilePanel.Children.Add(Ui.Button("Проверить вход и сохранить", () =>
+        {
+            if (profileChild.SelectedItem is not Child child) throw new ArgumentException("Выберите ребёнка. Нового ребёнка сначала сохраните на вкладке «Дети».");
+            try
+            {
+                if (useCurrent.IsChecked == true) WindowsProfiles.Clear(store, child.Id);
+                else { using var secret = password.SecurePassword; WindowsProfiles.Save(store, child.Id, account.Text, secret); }
+                App.Log.Write("Windows launch profile updated for child=" + child.Id); LoadProfile();
+                profileStatus.Text = "Сохранено. Настройка применяется при следующем запуске игры.";
+            }
+            finally { password.Clear(); }
+        }));
+        profilePanel.Children.Add(Ui.Text("Выбор текущего пользователя и сохранение удаляют сохранённые учётные данные. Пароль защищён DPAPI текущего пользователя Windows; после переноса базы на другой ПК или в другой профиль его нужно ввести заново. Команды игр и аргументы ярлыков не меняются. Взрослые сессии запускаются от текущего пользователя."));
+        tabs.SelectionChanged += (_, e) =>
+        {
+            if (e.Source == tabs && tabs.SelectedIndex == 5) { var id = (profileChild.SelectedItem as Child)?.Id; profileChild.ItemsSource = store.Children(); profileChild.SelectedItem = profileChild.Items.Cast<Child>().FirstOrDefault(c => c.Id == id) ?? profileChild.Items.Cast<Child>().FirstOrDefault(); }
+        };
+        profileChild.ItemsSource = store.Children(); profileChild.SelectedIndex = 0;
         ReloadChildren(); ReloadGames(); timer.Tick += (_, _) => Ui.Guard(UpdateStats); timer.Start(); Closed += (_, _) => timer.Stop();
     }
     private Child RequireChild() => selectedChild ?? throw new ArgumentException("Сначала выберите или сохраните ребёнка.");

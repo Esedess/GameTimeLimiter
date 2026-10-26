@@ -29,6 +29,14 @@ internal static class SmokeTest
             for (var i = 0; i < tabs.Items.Count; i++)
             {
                 tabs.SelectedIndex = i;
+                if (i == 5)
+                {
+                    var profilePanel = (StackPanel)((ScrollViewer)((TabItem)tabs.Items[i]).Content).Content;
+                    var accounts = profilePanel.Children.OfType<ListBox>().Last();
+                    accounts.ItemsSource = new[] { "PC\\GameChild" }; accounts.SelectedIndex = 0;
+                    var current = profilePanel.Children.OfType<CheckBox>().Single(); current.IsChecked = false;
+                    current.RaiseEvent(new RoutedEventArgs(CheckBox.ClickEvent));
+                }
                 Render(settings, $"settings-{i}{suffix}.png");
                 if (i == 1)
                 {

@@ -16,7 +16,7 @@ if (-not $IsccPath) {
 if (-not $IsccPath -or -not (Test-Path -LiteralPath $IsccPath)) { throw 'Install Inno Setup 6/7 from https://jrsoftware.org/isdl.php or pass -IsccPath.' }
 [xml]$project = Get-Content src/GameLimiter.App/GameLimiter.App.csproj
 $version = [string]$project.Project.PropertyGroup.Version
-if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Application Version must be major.minor.patch.' }
+if ($version -notmatch '^\d+\.\d+\.\d+(-beta\.\d+)?$') { throw 'Application Version must be major.minor.patch.' }
 $publishDir = Join-Path $taskRoot $PublishDirectory
 $releaseDir = Join-Path $taskRoot 'artifacts/release'
 if (-not (Test-Path "$publishDir/GameLimiter.exe")) { throw 'Publish output is missing; run build.ps1 first.' }

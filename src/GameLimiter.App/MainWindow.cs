@@ -17,7 +17,7 @@ public sealed class MainWindow : Window
     public MainWindow(Store store, SessionCoordinator coordinator, Game? game)
     {
         this.store = store; this.coordinator = coordinator; this.game = game;
-        Title = "GameLimiter"; Width = 520; Height = 620; MinWidth = 420; MinHeight = 360; WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        Title = "GameLimiter Beta"; Width = 520; Height = 620; MinWidth = 420; MinHeight = 360; WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var panel = new StackPanel { Margin = new Thickness(24) }; Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         panel.Children.Add(Ui.Text(game?.DisplayName ?? "GameLimiter", 30)); panel.Children.Add(status); panel.Children.Add(players);
         var addTime = Ui.Button("◷ +  Добавить время", () =>
