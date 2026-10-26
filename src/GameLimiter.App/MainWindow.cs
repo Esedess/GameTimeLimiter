@@ -20,6 +20,15 @@ public sealed class MainWindow : Window
         Title = "GameLimiter"; Width = 520; Height = 620; MinWidth = 420; MinHeight = 360; WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var panel = new StackPanel { Margin = new Thickness(24) }; Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         panel.Children.Add(Ui.Text(game?.DisplayName ?? "GameLimiter", 30)); panel.Children.Add(status); panel.Children.Add(players);
+        var addTime = Ui.Button("◷ +  Добавить время", () =>
+        {
+            var session = coordinator.SessionId;
+            if (coordinator.CanAddTime && Authenticate() && coordinator.CanAddTime && coordinator.SessionId == session)
+                new AddTimeWindow(store, coordinator) { Owner = this }.ShowDialog();
+        });
+        addTime.IsEnabled = coordinator.CanAddTime;
+        panel.Children.Add(addTime);
+        coordinator.Updated += (_, _, _) => addTime.IsEnabled = coordinator.CanAddTime;
         panel.Children.Add(Ui.Button("Настройки родителя", () => { if (Authenticate()) new SettingsWindow(store, coordinator) { Owner = this }.ShowDialog(); }));
         panel.Children.Add(Ui.Button("Завершить текущую игру", () => { if (coordinator.Active && Authenticate()) coordinator.Stop(); }));
         coordinator.Updated += (remaining, state, handle) => { status.Text = state == SessionState.Completed ? "Игра завершена" : remaining == long.MaxValue ? "Взрослый · без лимита" : $"Осталось {Ui.Time(remaining)}"; overlay.Update(remaining, state, handle, store.Settings); };

@@ -7,6 +7,59 @@ namespace GameLimiter.Core.Tests;
 public sealed class SessionLifecycleTests : IDisposable
 {
     private readonly string folder = Path.Combine(Path.GetTempPath(), "GameLimiterLifecycle-" + Guid.NewGuid());
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AddTimeExtendsCurrentSession(bool childSession)
+    {
+        var store = new Store(Path.Combine(folder, "test.db"));
+        var child = store.SaveChild(new(0, "Child", 1800));
+        var coordinator = new SessionCoordinator(store, new Launcher(new TestProcess()), new LocalLog(folder));
+        var added = false;
+        coordinator.Updated += (_, state, _) =>
+        {
+            if (state != SessionState.Running) return;
+            if (!added)
+            {
+                Assert.Throws<InvalidOperationException>(() => coordinator.AddTime(coordinator.SessionId + 1, 5));
+                Assert.Throws<ArgumentException>(() => coordinator.AddTime(coordinator.SessionId, 0));
+                Assert.Throws<ArgumentException>(() => coordinator.AddTime(coordinator.SessionId, 1441));
+                coordinator.AddTime(coordinator.SessionId, 5); added = true;
+            }
+            else { Assert.InRange(coordinator.Remaining, 2090, 2100); coordinator.Stop(); }
+        };
+        await coordinator.RunAsync(new("test", "Test", "unused.exe"), childSession ? child.Id : null, childSession ? null : 1800);
+        Assert.True(added);
+        Assert.Equal(childSession ? 300 : 0, store.Allowance(child.Id, DateOnly.FromDateTime(DateTime.Now)).Adjustment);
+        Assert.Equal(1800, store.Children()[0].BaseSeconds);
+        Assert.Throws<InvalidOperationException>(() => coordinator.AddTime(coordinator.SessionId, 5));
+    }
+    [Fact]
+    public async Task AddingTimeCancelsAdjustmentGrace()
+    {
+        var store = new Store(Path.Combine(folder, "test.db")); var child = store.SaveChild(new(0, "Child", 60));
+        var coordinator = new SessionCoordinator(store, new Launcher(new TestProcess()), new LocalLog(folder));
+        var step = 0;
+        coordinator.Updated += (_, state, _) =>
+        {
+            if (state == SessionState.Running && step == 0) { store.Adjust(child.Id, DateOnly.FromDateTime(DateTime.Now), -60); coordinator.SettingsChanged(true); step = 1; }
+            else if (state == SessionState.GraceCountdown && step == 1) { coordinator.AddTime(coordinator.SessionId, 5); step = 2; }
+            else if (state == SessionState.Running && step == 2) { step = 3; coordinator.Stop(); }
+        };
+        await coordinator.RunAsync(new("test", "Test", "unused.exe"), child.Id, null);
+        Assert.Equal(3, step);
+    }
+    [Fact]
+    public async Task UnlimitedAndClosingSessionsCannotBeExtended()
+    {
+        var store = new Store(Path.Combine(folder, "test.db"));
+        var coordinator = new SessionCoordinator(store, new Launcher(new TestProcess()), new LocalLog(folder));
+        coordinator.Updated += (_, state, _) => { if (state == SessionState.Running) { Assert.False(coordinator.CanAddTime); Assert.Throws<InvalidOperationException>(() => coordinator.AddTime(coordinator.SessionId, 5)); coordinator.Stop(); } };
+        await coordinator.RunAsync(new("test", "Test", "unused.exe"), null, null);
+        var closing = new SessionCoordinator(store, new Launcher(new TestProcess()), new LocalLog(folder));
+        closing.Updated += (_, state, _) => { if (state == SessionState.Closing) Assert.Throws<InvalidOperationException>(() => closing.AddTime(closing.SessionId, 5)); };
+        await closing.RunAsync(new("test", "Test", "unused.exe"), null, 0);
+    }
     [Fact]
     public async Task StartedIsRaisedAfterAttachmentAndReturnFollowsFinalPersistence()
     {

@@ -41,6 +41,18 @@ internal static class SmokeTest
             }
             Render(new PinWindow(store, true), $"first-run{suffix}.png");
             Render(new MainWindow(store, coordinator, game), $"players{suffix}.png");
+            var previewProcess = new PreviewProcess();
+            var preview = new SessionCoordinator(store, new PreviewLauncher(previewProcess), new LocalLog(folder));
+            var run = preview.RunAsync(game, store.Children()[0].Id, null);
+            var addWindow = new AddTimeWindow(store, preview);
+            Render(addWindow, $"add-time{suffix}.png");
+            var before = store.Allowance(store.Children()[0].Id, DateOnly.FromDateTime(DateTime.Now)).Adjustment;
+            var quick = ((StackPanel)addWindow.Content).Children.OfType<WrapPanel>().Single();
+            quick.Children.OfType<Button>().First().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            if (store.Allowance(store.Children()[0].Id, DateOnly.FromDateTime(DateTime.Now)).Adjustment != before + 300)
+                throw new InvalidOperationException("Add time button did not persist allowance.");
+            preview.Stop(); await run;
+            store.Adjust(store.Children()[0].Id, DateOnly.FromDateTime(DateTime.Now), -300);
 
             // Exercise the real Settings theme button and verify the saved preference.
             var general = (StackPanel)((ScrollViewer)((TabItem)tabs.Items[4]).Content).Content;
@@ -74,5 +86,18 @@ internal static class SmokeTest
             bitmap.Render(background); bitmap.Render(content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var output = File.Create(Path.Combine(folder, filename)); encoder.Save(output);
         }
+    }
+    private sealed class PreviewLauncher(PreviewProcess process) : IProcessLauncher
+    {
+        public Task<IGameProcess> LaunchAsync(Game game, int timeoutSeconds, CancellationToken cancellationToken) => Task.FromResult<IGameProcess>(process);
+    }
+    private sealed class PreviewProcess : IGameProcess
+    {
+        public int Id => 0;
+        public long StartUtcTicks => 0;
+        public nint WindowHandle => 0;
+        public bool HasExited { get; private set; }
+        public Task CloseAsync(int graceSeconds, CancellationToken cancellationToken) { HasExited = true; return Task.CompletedTask; }
+        public void Dispose() { }
     }
 }

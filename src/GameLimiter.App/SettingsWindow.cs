@@ -96,7 +96,7 @@ public sealed class SettingsWindow : Window
         diagnostics.Children.Add(themeStatus);
         diagnostics.Children.Add(Ui.Text("Выбор сохраняется сразу и применяется ко всем окнам."));
         diagnostics.Children.Add(Ui.Text("Диагностика", 20));
-        diagnostics.Children.Add(Ui.Text("GameLimiter 1.0.2 · Windows x64\nБаза: " + Path.Combine(App.DataFolder, "gametime.db") + "\nЖурналы: " + Path.Combine(App.DataFolder, "logs")));
+        diagnostics.Children.Add(Ui.Text("GameLimiter 1.0.3 · Windows x64\nБаза: " + Path.Combine(App.DataFolder, "gametime.db") + "\nЖурналы: " + Path.Combine(App.DataFolder, "logs")));
         diagnostics.Children.Add(Ui.Button("Открыть папку данных", () => Process.Start(new ProcessStartInfo(App.DataFolder) { UseShellExecute = true })));
         diagnostics.Children.Add(Ui.Button("Открыть журналы", () => { var folder = Path.Combine(App.DataFolder, "logs"); Directory.CreateDirectory(folder); Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true }); }));
         diagnostics.Children.Add(Ui.Text("Обычный запуск игры — через её ярлык. Во время игры окно GameLimiter можно свернуть; настройки доступны на панели задач. Изменения полей сохраняются кнопкой «Сохранить»."));
